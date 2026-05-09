@@ -1,0 +1,146 @@
+/* Bare-minimum styling. The freeze plugin does not ship its own CSS — apps
+   choose how to render `[data-frozen="true"]` spans. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  background: #fafafa;
+  color: #222;
+}
+
+main {
+  max-width: 720px;
+  margin: 32px auto;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
+}
+
+header h1 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+}
+
+header p {
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+#toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+#toolbar button {
+  font: inherit;
+  padding: 6px 12px;
+  border: 1px solid #d0d0d0;
+  background: #f5f5f7;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#toolbar button:hover {
+  background: #e6e6ea;
+}
+
+#toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+#editor {
+  min-height: 200px;
+  padding: 12px 16px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: white;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+#editor .ProseMirror {
+  outline: none;
+}
+
+/* The plugin emits `data-frozen="true"` and `data-frozen-marker` attributes,
+   plus a `pm-frozen-locked` decoration class while freeze mode is on. */
+.pm-frozen {
+  background: rgb(255 215 0 / 0.4);
+  border-radius: 3px;
+  padding: 0 2px;
+  user-select: text;
+}
+
+.pm-frozen.pm-frozen-locked {
+  cursor: not-allowed;
+}
+
+.pm-frozen-marker {
+  display: inline-block;
+  width: 6px;
+  height: 1.1em;
+  background: #4caf50;
+  vertical-align: -0.2em;
+  border-radius: 2px;
+  margin: 0 1px;
+}
+
+.pm-frozen-marker::before {
+  content: '\200B';
+}
+
+.shortcuts {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.shortcuts kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid #cdcdcd;
+  background: #f0f0f0;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.8em;
+}
+
+#toolbar .sep {
+  display: inline-block;
+  width: 1px;
+  background: #ddd;
+  align-self: stretch;
+}
+
+.mode-indicator {
+  margin: 8px 0 12px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: #eef4ff;
+  color: #234;
+  font-size: 0.85rem;
+}
+
+#output h2 {
+  font-size: 1rem;
+  margin: 24px 0 4px;
+}
+
+#output pre {
+  background: #1f1f1f;
+  color: #f5f5f7;
+  padding: 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "promise"],
+  "categories": {
+    "correctness": "error",
+    "perf": "error",
+    "suspicious": "error",
+    "pedantic": "warn",
+    "restriction": "off",
+    "style": "off",
+    "nursery": "off"
+  },
+  "rules": {
+    "no-console": "off",
+    "no-magic-numbers": "off",
+    "max-lines": "off",
+    "max-lines-per-function": "off",
+    "max-depth": "off",
+    "max-params": "off",
+    "max-nested-callbacks": "off",
+    "no-ternary": "off",
+    "no-undefined": "off",
+    "no-negated-condition": "off",
+    "no-warning-comments": "off",
+    "func-style": "off",
+    "yoda": "off",
+    "sort-keys": "off",
+    "sort-imports": "off",
+    "id-length": "off",
+    "one-var": "off",
+    "init-declarations": "off",
+    "prefer-destructuring": "off",
+    "prefer-named-capture-group": "off",
+    "no-await-in-loop": "off",
+    "no-plusplus": "off",
+    "no-bitwise": "off",
+    "complexity": "off",
+    "guard-for-in": "off",
+    "no-continue": "off",
+    "no-restricted-syntax": "off",
+    "no-underscore-dangle": "off",
+    "import/no-default-export": "off",
+    "import/exports-last": "off",
+    "import/group-exports": "off",
+    "import/max-dependencies": "off",
+    "import/no-namespace": "off",
+    "typescript/consistent-indexed-object-style": "off",
+    "typescript/consistent-type-imports": "error",
+    "typescript/explicit-function-return-type": "off",
+    "typescript/explicit-module-boundary-types": "off",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "off",
+    "typescript/prefer-readonly-parameter-types": "off",
+    "unicorn/filename-case": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/no-null": "off",
+    "unicorn/number-literal-case": "off",
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/prevent-abbreviations": "off",
+    "unicorn/no-array-callback-reference": "off"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2022": true
+  },
+  "ignorePatterns": ["dist/", "node_modules/", "coverage/", "*.config.ts", "*.config.js"],
+  "overrides": [
+    {
+      "files": ["tests/**/*.ts", "e2e/**/*.ts"],
+      "rules": {
+        "no-console": "off",
+        "typescript/no-non-null-assertion": "off",
+        "typescript/no-explicit-any": "off",
+        "import/no-default-export": "off"
+      }
+    },
+    {
+      "files": ["example/**/*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
+}

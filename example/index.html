@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>prosemirror-freeze-plugin example</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>prosemirror-freeze-plugin</h1>
+        <p>
+          Type freely between frozen sections. Try to delete a frozen section with Backspace,
+          Delete, Cut, or by selecting and typing — none of it should land. Insert a marker at
+          start/end to open the boundary for editing. Toggle <em>freeze mode</em> off to edit frozen
+          text in place.
+        </p>
+        <p class="shortcuts">
+          Shortcuts:
+          <kbd>Ctrl/Cmd</kbd>+<kbd>B</kbd> freezes the selection (or unfreezes when adjacent to
+          frozen) · <kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> bold ·
+          <kbd>Ctrl/Cmd</kbd>+<kbd>I</kbd> italic · <kbd>Ctrl/Cmd</kbd>+<kbd>Shift</kbd>+<kbd
+            >L</kbd
+          >
+          toggle freeze mode
+        </p>
+      </header>
+
+      <section id="toolbar">
+        <button id="btn-bold" title="Bold (Mod+Shift+B)"><b>B</b></button>
+        <button id="btn-italic" title="Italic (Mod+I)"><i>I</i></button>
+        <span class="sep"></span>
+        <button id="btn-freeze-selection" title="Freeze the selected text (Mod+B)">
+          Freeze selection
+        </button>
+        <button id="btn-clear-frozen" title="Remove the adjacent or selected frozen">
+          Clear frozen
+        </button>
+        <button id="btn-add-frozen" title="Insert a frozen at the cursor">Add frozen…</button>
+        <span class="sep"></span>
+        <button id="btn-start-marker" title="Insert a start-boundary marker">
+          Add start marker
+        </button>
+        <button id="btn-end-marker" title="Insert an end-boundary marker">Add end marker</button>
+        <span class="sep"></span>
+        <label>
+          <input type="checkbox" id="freeze-mode-toggle" checked />
+          freeze mode
+        </label>
+      </section>
+
+      <p id="mode-indicator" class="mode-indicator"></p>
+
+      <section id="editor"></section>
+
+      <section id="output">
+        <h2>Markdown</h2>
+        <pre id="markdown-out"></pre>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
