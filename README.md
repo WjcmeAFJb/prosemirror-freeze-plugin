@@ -226,6 +226,41 @@ will then never fire.
 | Drag a frozen out of the document                  | blocked                 | normal         |
 | Third-party plugin transaction that removes frozen | blocked                 | normal         |
 
+## TipTap (`prosemirror-freeze-plugin/tiptap`)
+
+Drop-in TipTap Node extension. Pulls in the same schema, plugin, and
+keymap that the bare ProseMirror version exposes.
+
+```ts
+import { Editor } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+import { Frozen } from 'prosemirror-freeze-plugin/tiptap';
+
+const editor = new Editor({
+  element: document.querySelector('#editor')!,
+  extensions: [
+    StarterKit,
+    Frozen.configure({
+      freezeMode: true, // default
+      blockCutOnFrozen: true, // default
+    }),
+  ],
+  content: '<p>Hello <span data-frozen="true">WORLD</span>!</p>',
+});
+
+// Same names as the PM commands, exposed through the TipTap command surface.
+editor.commands.freezeSelection();
+editor.commands.addFrozen('NEW');
+editor.commands.clearFrozen();
+editor.commands.insertStartMarker();
+editor.commands.insertEndMarker();
+editor.commands.toggleFreezeMode();
+editor.commands.setFreezeMode(false);
+```
+
+`Mod-b`, `Mod-Shift-b`, and `Mod-Shift-l` are wired by default. Override
+with TipTap's normal extension configuration if you need different keys.
+
 ## Markdown caveats
 
 - `~~` conflicts with GFM strikethrough. Pick one syntax for any given

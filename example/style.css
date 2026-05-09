@@ -136,11 +136,39 @@ header p {
   margin: 24px 0 4px;
 }
 
-#output pre {
+#output textarea {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85rem;
   background: #1f1f1f;
   color: #f5f5f7;
   padding: 12px;
+  border: 1px solid #1f1f1f;
   border-radius: 6px;
-  overflow-x: auto;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+
+#output textarea:focus {
+  border-color: #4caf50;
+  outline: none;
+}
+
+#output .hint {
   font-size: 0.85rem;
+  color: #666;
+  margin: 4px 0;
+}
+
+.markdown-error {
+  color: #b00020;
+  background: #fff0f1;
+  border: 1px solid #f5c2c7;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  margin: 6px 0 0;
 }

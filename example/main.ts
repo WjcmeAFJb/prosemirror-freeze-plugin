@@ -92,11 +92,20 @@ const view = new EditorView(editorContainer as HTMLElement, {
   },
 });
 
-const markdownOut = document.querySelector('#markdown-out')!;
+const markdownOut = document.querySelector<HTMLTextAreaElement>('#markdown-out')!;
+const markdownError = document.querySelector<HTMLElement>('#markdown-error')!;
 const modeIndicator = document.querySelector('#mode-indicator');
 
+// Bidirectional sync between the doc and the markdown textarea. A simple
+// boolean lock prevents one side echoing the other side's update back.
+let syncing = false;
+
 function refreshUi(): void {
-  markdownOut.textContent = serializer.serialize(view.state.doc);
+  if (!syncing) {
+    syncing = true;
+    markdownOut.value = serializer.serialize(view.state.doc);
+    syncing = false;
+  }
   if (modeIndicator) {
     modeIndicator.textContent = isFreezeModeOn(view.state)
       ? 'freeze mode is ON — frozen text is locked'
@@ -104,6 +113,28 @@ function refreshUi(): void {
   }
 }
 refreshUi();
+
+let parseTimer: ReturnType<typeof setTimeout> | null = null;
+markdownOut.addEventListener('input', () => {
+  if (syncing) return;
+  if (parseTimer) clearTimeout(parseTimer);
+  parseTimer = setTimeout(() => {
+    parseTimer = null;
+    try {
+      const parsed = parser.parse(markdownOut.value);
+      const newState = EditorState.create({ doc: parsed, plugins });
+      syncing = true;
+      view.updateState(newState);
+      syncing = false;
+      markdownError.hidden = true;
+      markdownError.textContent = '';
+    } catch (err) {
+      markdownError.hidden = false;
+      markdownError.textContent =
+        'Failed to parse markdown: ' + (err instanceof Error ? err.message : String(err));
+    }
+  }, 250);
+});
 
 function bind(id: string, fn: () => void): void {
   const el = document.querySelector(`#${id}`);

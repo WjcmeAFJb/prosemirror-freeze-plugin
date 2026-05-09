@@ -3,12 +3,16 @@ import { resolve } from 'node:path';
 
 export default defineConfig({
   root: resolve(__dirname),
+  // GitHub Pages serves the demo from /<repo-name>/. Override with
+  // BASE_URL=/ when building for a different host (or the dev server).
+  base: process.env['BASE_URL'] ?? '/',
   resolve: {
     alias: {
       // Resolve the package back to local sources during development so the
       // example always reflects the current working tree.
       'prosemirror-freeze-plugin': resolve(__dirname, '../src/index.ts'),
       'prosemirror-freeze-plugin/markdown': resolve(__dirname, '../src/markdown.ts'),
+      'prosemirror-freeze-plugin/tiptap': resolve(__dirname, '../src/tiptap.ts'),
     },
   },
   build: {
