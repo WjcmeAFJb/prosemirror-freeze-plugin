@@ -48,8 +48,10 @@ dispatched by other plugins — enforces the protection rules.
 
 ```bash
 # From a release tarball:
-pnpm add https://github.com/<owner>/prosemirror-freeze-plugin/releases/download/v0.1.0/prosemirror-freeze-plugin-0.1.0.tgz
+pnpm add https://github.com/<owner>/prosemirror-freeze-plugin/releases/download/v0.2.0/prosemirror-freeze-plugin-0.2.0.tgz
 ```
+
+A live demo lives at <https://wjcmeafjb.github.io/prosemirror-freeze-plugin/>.
 
 Peer dependencies: `prosemirror-state`, `prosemirror-model`,
 `prosemirror-view`, `prosemirror-keymap`, `prosemirror-commands`. Markdown
