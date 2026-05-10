@@ -6,6 +6,8 @@ import {
   clearFrozen,
   freezeSelection,
   getFrozenTextById,
+  hasEndMarker,
+  hasStartMarker,
   insertEndMarker,
   insertStartMarker,
   isFreezeModeOn,
@@ -392,5 +394,61 @@ describe('getFrozenTextById', () => {
       ['b', 'two'],
       ['m', ''],
     ]);
+  });
+});
+
+describe('hasStartMarker / hasEndMarker', () => {
+  beforeEach(resetIds);
+
+  it('hasStartMarker is true when the doc starts with an empty frozen', () => {
+    const m = marker('m1');
+    const f = frozen('content', 'f1');
+    expect(hasStartMarker(makeState(doc(p(m, f))))).toBe(true);
+  });
+
+  it('hasStartMarker is false when the doc starts with a non-marker frozen', () => {
+    const f = frozen('content', 'f1');
+    expect(hasStartMarker(makeState(doc(p(f))))).toBe(false);
+  });
+
+  it('hasStartMarker is false when the doc starts with text', () => {
+    expect(hasStartMarker(makeState(doc(p('plain'))))).toBe(false);
+  });
+
+  it('hasStartMarker is false when the doc has no inline content', () => {
+    expect(hasStartMarker(makeState(doc(p())))).toBe(false);
+  });
+
+  it('hasEndMarker is true when the doc ends with an empty frozen', () => {
+    const f = frozen('content', 'f1');
+    const m = marker('m1');
+    expect(hasEndMarker(makeState(doc(p(f, m))))).toBe(true);
+  });
+
+  it('hasEndMarker is false when the doc ends with a non-marker frozen', () => {
+    const f = frozen('content', 'f1');
+    expect(hasEndMarker(makeState(doc(p(f))))).toBe(false);
+  });
+
+  it('hasEndMarker is false when the doc ends with text', () => {
+    expect(hasEndMarker(makeState(doc(p('plain'))))).toBe(false);
+  });
+
+  it('handles multi-paragraph docs by checking the last paragraph', () => {
+    const f = frozen('c', 'f1');
+    const m = marker('m1');
+    const state = makeState(doc(p('first'), p(f, m)));
+    expect(hasEndMarker(state)).toBe(true);
+    expect(hasStartMarker(state)).toBe(false);
+  });
+
+  it('round-trip: insertStartMarker then hasStartMarker is true; remove then false', () => {
+    const f = frozen('c', 'a');
+    let state = makeState(doc(p(f)));
+    expect(hasStartMarker(state)).toBe(false);
+    state = runCommand(state, insertStartMarker()).state;
+    expect(hasStartMarker(state)).toBe(true);
+    state = runCommand(state, removeStartMarker).state;
+    expect(hasStartMarker(state)).toBe(false);
   });
 });

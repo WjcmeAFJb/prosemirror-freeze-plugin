@@ -48,8 +48,13 @@ header p {
   cursor: pointer;
 }
 
-#toolbar button:hover {
+#toolbar button:hover:not(:disabled) {
   background: #e6e6ea;
+}
+
+#toolbar button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 #toolbar label {

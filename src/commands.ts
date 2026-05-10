@@ -429,6 +429,27 @@ export function canFreezeSelection(state: EditorState): boolean {
 }
 
 /**
+ * Returns true when the document is already prefixed with a boundary
+ * marker — i.e. the leftmost inline node of the leftmost text container
+ * is an empty frozen. Useful for menu logic: gate the "Add start marker"
+ * button on `!hasStartMarker(state)`.
+ */
+export function hasStartMarker(state: EditorState): boolean {
+  const startPos = findStartContentPos(state.doc);
+  if (startPos === null) return false;
+  const after = state.doc.resolve(startPos).nodeAfter;
+  return Boolean(after && isFrozenMarker(after));
+}
+
+/** Symmetric to {@link hasStartMarker}. */
+export function hasEndMarker(state: EditorState): boolean {
+  const endPos = findEndContentPos(state.doc);
+  if (endPos === null) return false;
+  const before = state.doc.resolve(endPos).nodeBefore;
+  return Boolean(before && isFrozenMarker(before));
+}
+
+/**
  * Extract the text content of every frozen node, keyed by id. Useful for
  * persisting/inspecting frozen sections outside the editor.
  */

@@ -48,7 +48,7 @@ dispatched by other plugins — enforces the protection rules.
 
 ```bash
 # From a release tarball:
-pnpm add https://github.com/WjcmeAFJb/prosemirror-freeze-plugin/releases/download/v0.3.0/prosemirror-freeze-plugin-0.3.0.tgz
+pnpm add https://github.com/WjcmeAFJb/prosemirror-freeze-plugin/releases/download/v0.3.1/prosemirror-freeze-plugin-0.3.1.tgz
 ```
 
 A live demo lives at <https://wjcmeafjb.github.io/prosemirror-freeze-plugin/>.
@@ -156,7 +156,9 @@ they dispatch.
 | `insertStartMarker()` / `insertEndMarker()` | Pin a boundary marker at the document start/end.                                                                               |
 | `removeStartMarker` / `removeEndMarker`     | Symmetric.                                                                                                                     |
 | `selectionTouchesFrozen(state)`             | Predicate (not a command) for toolbar enabled-state UIs.                                                                       |
-| `canFreezeSelection(state)`                 | Predicate.                                                                                                                     |
+| `canFreezeSelection(state)`                 | Predicate — true when the selection can be wrapped in a frozen.                                                                |
+| `hasStartMarker(state)`                     | Predicate — true when the doc already starts with a boundary marker.                                                           |
+| `hasEndMarker(state)`                       | Predicate — true when the doc already ends with a boundary marker.                                                             |
 | `getFrozenTextById(state)`                  | Map of every frozen `id` → `textContent` in the doc.                                                                           |
 
 ### Keymap (`freezeKeymap`)

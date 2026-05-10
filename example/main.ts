@@ -20,6 +20,8 @@ import {
   freezePlugin,
   freezeSelection,
   frozenNodeSpec,
+  hasEndMarker,
+  hasStartMarker,
   insertEndMarker,
   insertStartMarker,
   isFreezeModeOn,
@@ -101,6 +103,9 @@ const modeIndicator = document.querySelector('#mode-indicator');
 // boolean lock prevents one side echoing the other side's update back.
 let syncing = false;
 
+const startMarkerBtn = document.querySelector<HTMLButtonElement>('#btn-start-marker');
+const endMarkerBtn = document.querySelector<HTMLButtonElement>('#btn-end-marker');
+
 function refreshUi(): void {
   if (!syncing) {
     syncing = true;
@@ -112,6 +117,8 @@ function refreshUi(): void {
       ? 'freeze mode is ON — frozen text is locked'
       : 'freeze mode is OFF — frozen text can be edited inline';
   }
+  if (startMarkerBtn) startMarkerBtn.disabled = hasStartMarker(view.state);
+  if (endMarkerBtn) endMarkerBtn.disabled = hasEndMarker(view.state);
 }
 refreshUi();
 

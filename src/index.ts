@@ -35,6 +35,8 @@ export {
   clearFrozen,
   freezeSelection,
   getFrozenTextById,
+  hasEndMarker,
+  hasStartMarker,
   insertEndMarker,
   insertStartMarker,
   removeEndMarker,

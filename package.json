@@ -1,6 +1,6 @@
 {
   "name": "prosemirror-freeze-plugin",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "ProseMirror plugin that introduces non-deletable, non-editable frozen text sections with markdown round-trip support.",
   "keywords": [
     "editor",
