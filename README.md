@@ -48,7 +48,7 @@ dispatched by other plugins — enforces the protection rules.
 
 ```bash
 # From a release tarball:
-pnpm add https://github.com/WjcmeAFJb/prosemirror-freeze-plugin/releases/download/v0.3.1/prosemirror-freeze-plugin-0.3.1.tgz
+pnpm add https://github.com/WjcmeAFJb/prosemirror-freeze-plugin/releases/download/v0.4.0/prosemirror-freeze-plugin-0.4.0.tgz
 ```
 
 A live demo lives at <https://wjcmeafjb.github.io/prosemirror-freeze-plugin/>.
@@ -265,8 +265,19 @@ editor.commands.toggleFreezeMode();
 editor.commands.setFreezeMode(false);
 ```
 
-`Mod-b`, `Mod-Shift-b`, and `Mod-Shift-l` are wired by default. Override
-with TipTap's normal extension configuration if you need different keys.
+Default shortcuts: `Mod-b` → `toggleFreeze`, `Mod-Shift-b` →
+`clearFrozen`, `Mod-Shift-l` → `toggleFreezeMode`. Each one can be
+remapped or disabled at configure time:
+
+```ts
+Frozen.configure({
+  shortcuts: {
+    toggleFreeze: 'Mod-Shift-f', // remap
+    clearFrozen: false, // disable — falls through to other extensions
+    // toggleFreezeMode left as default
+  },
+});
+```
 
 ## Markdown caveats
 

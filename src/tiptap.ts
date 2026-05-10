@@ -1,4 +1,4 @@
-import { mergeAttributes, Node } from '@tiptap/core';
+import { type Editor, mergeAttributes, Node } from '@tiptap/core';
 import type { Plugin } from 'prosemirror-state';
 
 import {
@@ -16,6 +16,21 @@ import {
 import { defaultGenerateId } from './id.js';
 import { freezePlugin, freezePluginKey } from './plugin.js';
 
+/**
+ * Per-action keyboard shortcut overrides for {@link Frozen}. A string
+ * value (e.g. `"Mod-Shift-f"`) replaces the default binding; `false`
+ * unbinds the action entirely so the keystroke falls through to other
+ * extensions or the platform.
+ */
+export interface FreezeExtensionShortcuts {
+  /** Default `Mod-b`. Toggles freeze on the current selection. */
+  toggleFreeze?: string | false;
+  /** Default `Mod-Shift-b`. Always unfreezes. */
+  clearFrozen?: string | false;
+  /** Default `Mod-Shift-l`. Flips the editor-wide freeze mode. */
+  toggleFreezeMode?: string | false;
+}
+
 export interface FreezeExtensionOptions {
   /** Initial freeze-mode value. Defaults to true. */
   freezeMode: boolean;
@@ -25,7 +40,21 @@ export interface FreezeExtensionOptions {
   generateId: () => string;
   /** Extra HTML attributes merged onto the rendered <span>. */
   HTMLAttributes: Record<string, unknown>;
+  /**
+   * Customise the keyboard shortcuts the extension installs. Anything
+   * you don't override keeps its default; `false` disables that
+   * binding so the key falls through to other extensions.
+   */
+  shortcuts: FreezeExtensionShortcuts;
 }
+
+const DEFAULT_SHORTCUTS = {
+  toggleFreeze: 'Mod-b',
+  clearFrozen: 'Mod-Shift-b',
+  toggleFreezeMode: 'Mod-Shift-l',
+} as const satisfies Required<{
+  [K in keyof FreezeExtensionShortcuts]: string;
+}>;
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -92,6 +121,7 @@ export const Frozen = Node.create<FreezeExtensionOptions>({
       blockCutOnFrozen: true,
       generateId: defaultGenerateId,
       HTMLAttributes: {},
+      shortcuts: {},
     };
   },
 
@@ -214,12 +244,23 @@ export const Frozen = Node.create<FreezeExtensionOptions>({
   },
 
   addKeyboardShortcuts() {
-    return {
-      // Mod-b: toggle (unfreeze if frozen is involved, else freeze).
-      'Mod-b': ({ editor }) => editor.chain().toggleFreeze().run(),
-      'Mod-Shift-b': ({ editor }) => editor.chain().clearFrozen().run(),
-      'Mod-Shift-l': ({ editor }) => editor.chain().toggleFreezeMode().run(),
-    };
+    const overrides = this.options.shortcuts ?? {};
+    const bindings: Record<string, (props: { editor: Editor }) => boolean> = {};
+    const handlers = {
+      toggleFreeze: ({ editor }: { editor: Editor }) => editor.chain().toggleFreeze().run(),
+      clearFrozen: ({ editor }: { editor: Editor }) => editor.chain().clearFrozen().run(),
+      toggleFreezeMode: ({ editor }: { editor: Editor }) => editor.chain().toggleFreezeMode().run(),
+    } as const satisfies Record<
+      keyof FreezeExtensionShortcuts,
+      (props: { editor: Editor }) => boolean
+    >;
+    for (const action of Object.keys(handlers) as (keyof typeof handlers)[]) {
+      const override = overrides[action];
+      if (override === false) continue;
+      const key = override ?? DEFAULT_SHORTCUTS[action];
+      bindings[key] = handlers[action];
+    }
+    return bindings;
   },
 
   addProseMirrorPlugins(): Plugin[] {

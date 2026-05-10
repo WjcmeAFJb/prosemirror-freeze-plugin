@@ -38,6 +38,25 @@ function frozenSpans(): NodeListOf<HTMLElement> {
   return container!.querySelectorAll<HTMLElement>('[data-frozen="true"]');
 }
 
+/**
+ * Read the keys registered by the Frozen extension's `addKeyboardShortcuts`.
+ * We invoke the handler with a minimal `this` shape that exposes only what
+ * the implementation reads (`options`), then return the resulting key set.
+ */
+function shortcutKeys(editor: Editor): string[] {
+  const ext = editor.extensionManager.extensions.find((ex) => ex.name === 'frozen');
+  if (!ext) return [];
+  const handler = ext.config.addKeyboardShortcuts;
+  if (typeof handler !== 'function') return [];
+  return Object.keys(
+    (handler as () => Record<string, unknown>).call({
+      ...ext,
+      options: ext.options,
+      name: ext.name,
+    } as never) ?? {},
+  );
+}
+
 describe('TipTap Frozen extension', () => {
   it('parses an existing <span data-frozen="true"> from initial HTML', () => {
     const e = mount(
@@ -162,5 +181,45 @@ describe('TipTap Frozen extension', () => {
     e.commands.setTextSelection(3); // between 'h' and 'i'
     e.commands.insertContent('!');
     expect(frozenSpans()[0]!.textContent).toBe('hi');
+  });
+});
+
+describe('TipTap Frozen extension: configurable shortcuts', () => {
+  // We assert on the registered keymap rather than dispatching real keys —
+  // the keymap is owned by ProseMirror's keydownHandler, so reading it
+  // directly is both faster and less flaky than userEvent.keyboard.
+
+  it('uses the default Mod-b / Mod-Shift-b / Mod-Shift-l keys', () => {
+    const e = mount(undefined, '<p>hi</p>');
+    const keys = shortcutKeys(e);
+    expect(keys).toContain('Mod-b');
+    expect(keys).toContain('Mod-Shift-b');
+    expect(keys).toContain('Mod-Shift-l');
+  });
+
+  it('lets the host override individual shortcut keys', () => {
+    const e = mount({ shortcuts: { toggleFreeze: 'Mod-Shift-f' } }, '<p>hi</p>');
+    const keys = shortcutKeys(e);
+    expect(keys).toContain('Mod-Shift-f');
+    expect(keys).not.toContain('Mod-b');
+    // The other defaults are still installed.
+    expect(keys).toContain('Mod-Shift-b');
+    expect(keys).toContain('Mod-Shift-l');
+  });
+
+  it('lets the host disable a shortcut by passing false', () => {
+    const e = mount({ shortcuts: { toggleFreezeMode: false, clearFrozen: false } }, '<p>hi</p>');
+    const keys = shortcutKeys(e);
+    expect(keys).not.toContain('Mod-Shift-l');
+    expect(keys).not.toContain('Mod-Shift-b');
+    expect(keys).toContain('Mod-b');
+  });
+
+  it('still wires the underlying commands when a shortcut is disabled', () => {
+    const e = mount({ shortcuts: { toggleFreeze: false } }, '<p>hello world</p>');
+    e.commands.setTextSelection({ from: 1, to: 6 });
+    e.chain().toggleFreeze().run();
+    expect(frozenSpans()).toHaveLength(1);
+    expect(frozenSpans()[0]!.textContent).toBe('hello');
   });
 });
