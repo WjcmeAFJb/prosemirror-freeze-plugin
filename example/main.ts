@@ -24,6 +24,7 @@ import {
   insertStartMarker,
   isFreezeModeOn,
   setFreezeMode,
+  toggleFreeze,
 } from '../src/index.js';
 import {
   FROZEN_TOKEN,
@@ -148,6 +149,11 @@ bind('btn-bold', () => {
 });
 bind('btn-italic', () => {
   if (emType) toggleMark(emType)(view.state, view.dispatch.bind(view));
+  view.focus();
+});
+
+bind('btn-toggle-freeze', () => {
+  toggleFreeze()(view.state, view.dispatch.bind(view));
   view.focus();
 });
 

@@ -17,7 +17,7 @@ The release workflow attaches a tarball to each tag. Install it like any
 other package — pnpm understands the URL form:
 
 ```bash
-pnpm add https://github.com/<owner>/prosemirror-freeze-plugin/releases/download/v0.1.0/prosemirror-freeze-plugin-0.1.0.tgz
+pnpm add https://github.com/WjcmeAFJb/prosemirror-freeze-plugin/releases/download/v0.3.0/prosemirror-freeze-plugin-0.3.0.tgz
 ```
 
 Then in your code:

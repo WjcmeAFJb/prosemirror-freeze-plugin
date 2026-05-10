@@ -138,18 +138,48 @@ function findFrozenForClear(state: { doc: PMNode; selection: Selection }): Found
   return found;
 }
 
+/**
+ * "Unfreeze" the frozen nodes adjacent to / under the selection. Each
+ * targeted node is replaced with its inline content (preserving marks),
+ * which in particular means an empty frozen — a marker — is removed
+ * outright rather than leaving a zero-width frozen behind.
+ */
 export function applyClearFrozen(
   tr: Transaction,
   state: { doc: PMNode; selection: Selection },
 ): boolean {
   const targets = findFrozenForClear(state);
   if (targets.length === 0) return false;
+  // Replace in reverse so earlier positions remain valid against `tr.doc`.
   for (let i = targets.length - 1; i >= 0; i--) {
     const { node, pos } = targets[i]!;
-    tr.delete(pos, pos + node.nodeSize);
+    const start = pos;
+    const end = pos + node.nodeSize;
+    if (node.content.size === 0) {
+      tr.delete(start, end);
+    } else {
+      tr.replaceWith(start, end, node.content);
+    }
   }
   setFreezeMeta(tr, { allowFrozenChanges: true });
   return true;
+}
+
+/**
+ * Toggle freezing for the current selection. If anything is frozen at or
+ * adjacent to the selection it gets unfrozen; otherwise the selection is
+ * frozen via {@link applyFreezeSelection}. Returns false when neither
+ * branch can apply.
+ */
+export function applyToggleFreeze(
+  tr: Transaction,
+  state: { doc: PMNode; selection: Selection; schema: Schema },
+  id: string,
+): boolean {
+  if (findFrozenForClear(state).length > 0) {
+    return applyClearFrozen(tr, state);
+  }
+  return applyFreezeSelection(tr, state, id);
 }
 
 function makeMarker(schema: Schema, id: string): PMNode | null {
@@ -280,7 +310,10 @@ export function freezeSelection(options: CommandOptions = {}): Command {
 }
 
 /**
- * Remove frozen nodes adjacent to the cursor or contained in the selection.
+ * Unfreeze frozen nodes adjacent to the cursor or contained in the
+ * selection. Each frozen is replaced with its inline content; empty
+ * frozens (markers) are removed entirely. Returns false when there is
+ * nothing to clear.
  */
 export const clearFrozen: Command = (state, dispatch) => {
   if (findFrozenForClear(state).length === 0) return false;
@@ -291,6 +324,26 @@ export const clearFrozen: Command = (state, dispatch) => {
   }
   return true;
 };
+
+/**
+ * Toggle freezing on the current selection: clear when frozen content
+ * is involved, otherwise wrap the selection in a frozen node.
+ */
+export function toggleFreeze(options: CommandOptions = {}): Command {
+  return (state, dispatch) => {
+    if (!getFrozenType(state)) return false;
+    const hasFrozen = findFrozenForClear(state).length > 0;
+    const canFreeze = canFreezeRange(state.doc, state.selection.from, state.selection.to);
+    if (!hasFrozen && !canFreeze) return false;
+    if (dispatch) {
+      const id = (options.generateId ?? defaultGenerateId)();
+      const tr = state.tr;
+      applyToggleFreeze(tr, state, id);
+      dispatch(tr);
+    }
+    return true;
+  };
+}
 
 export function insertStartMarker(options: CommandOptions = {}): Command {
   return (state, dispatch) => {

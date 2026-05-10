@@ -10,6 +10,7 @@ import {
   applyRemoveEndMarker,
   applyRemoveStartMarker,
   applySetFreezeMode,
+  applyToggleFreeze,
   canFreezeRange,
 } from './commands.js';
 import { defaultGenerateId } from './id.js';
@@ -33,8 +34,13 @@ declare module '@tiptap/core' {
       addFrozen: (text: string) => ReturnType;
       /** Wrap the current selection's content (with marks) in a frozen. */
       freezeSelection: () => ReturnType;
-      /** Remove the frozen adjacent to the cursor or in the selection. */
+      /**
+       * Unfreeze: replace the frozen node(s) at/under the selection with
+       * their inline content. Empty frozens (markers) are removed entirely.
+       */
       clearFrozen: () => ReturnType;
+      /** Toggle: unfreeze if frozen content is involved, else freeze the selection. */
+      toggleFreeze: () => ReturnType;
       /** Pin a boundary marker at the document start. */
       insertStartMarker: () => ReturnType;
       /** Pin a boundary marker at the document end. */
@@ -149,6 +155,15 @@ export const Frozen = Node.create<FreezeExtensionOptions>({
           return applyClearFrozen(tr, state);
         },
 
+      toggleFreeze:
+        () =>
+        ({ state, tr, dispatch }) => {
+          if (!dispatch) {
+            return applyToggleFreeze(state.tr, state, gen());
+          }
+          return applyToggleFreeze(tr, state, gen());
+        },
+
       insertStartMarker:
         () =>
         ({ state, tr, dispatch }) => {
@@ -200,15 +215,8 @@ export const Frozen = Node.create<FreezeExtensionOptions>({
 
   addKeyboardShortcuts() {
     return {
-      // Mod-b: clear an adjacent frozen, otherwise freeze the selection.
-      // We use `chain()` so both branches run inside a single transaction
-      // and we exhaust the cheaper option first.
-      'Mod-b': ({ editor }) => {
-        if (editor.can().clearFrozen()) {
-          return editor.chain().clearFrozen().run();
-        }
-        return editor.chain().freezeSelection().run();
-      },
+      // Mod-b: toggle (unfreeze if frozen is involved, else freeze).
+      'Mod-b': ({ editor }) => editor.chain().toggleFreeze().run(),
       'Mod-Shift-b': ({ editor }) => editor.chain().clearFrozen().run(),
       'Mod-Shift-l': ({ editor }) => editor.chain().toggleFreezeMode().run(),
     };

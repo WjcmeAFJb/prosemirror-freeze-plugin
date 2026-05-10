@@ -48,7 +48,7 @@ dispatched by other plugins — enforces the protection rules.
 
 ```bash
 # From a release tarball:
-pnpm add https://github.com/<owner>/prosemirror-freeze-plugin/releases/download/v0.2.0/prosemirror-freeze-plugin-0.2.0.tgz
+pnpm add https://github.com/WjcmeAFJb/prosemirror-freeze-plugin/releases/download/v0.3.0/prosemirror-freeze-plugin-0.3.0.tgz
 ```
 
 A live demo lives at <https://wjcmeafjb.github.io/prosemirror-freeze-plugin/>.
@@ -145,29 +145,31 @@ All commands are standard `(state, dispatch?) => boolean` ProseMirror
 commands. They set the `allowFrozenChanges` meta flag on the transactions
 they dispatch.
 
-| Command                                     | Purpose                                                                    |
-| ------------------------------------------- | -------------------------------------------------------------------------- |
-| `toggleFreezeMode`                          | Flip the freeze-mode flag.                                                 |
-| `setFreezeMode(value: boolean)`             | Set the freeze-mode flag explicitly.                                       |
-| `addFrozen(text)`                           | Insert a new frozen node carrying `text` at the cursor.                    |
-| `freezeSelection()`                         | Wrap the current selection's content (with its marks) in one frozen node.  |
-| `clearFrozen`                               | Remove the frozen adjacent to the cursor, surrounding it, or in selection. |
-| `insertStartMarker()` / `insertEndMarker()` | Pin a boundary marker at the document start/end.                           |
-| `removeStartMarker` / `removeEndMarker`     | Symmetric.                                                                 |
-| `selectionTouchesFrozen(state)`             | Predicate (not a command) for toolbar enabled-state UIs.                   |
-| `canFreezeSelection(state)`                 | Predicate.                                                                 |
-| `getFrozenTextById(state)`                  | Map of every frozen `id` → `textContent` in the doc.                       |
+| Command                                     | Purpose                                                                                                                        |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `toggleFreezeMode`                          | Flip the editor-wide freeze-mode flag.                                                                                         |
+| `setFreezeMode(value: boolean)`             | Set the freeze-mode flag explicitly.                                                                                           |
+| `addFrozen(text)`                           | Insert a new frozen node carrying `text` at the cursor.                                                                        |
+| `freezeSelection()`                         | Wrap the current selection's content (with its marks) in one frozen node.                                                      |
+| `clearFrozen`                               | "Unfreeze": replace the frozen adjacent to / under the selection with its inline content. Empty frozens (markers) are deleted. |
+| `toggleFreeze()`                            | Toggle freeze on the current selection — unfreeze if frozen content is involved, otherwise wrap the selection in a frozen.     |
+| `insertStartMarker()` / `insertEndMarker()` | Pin a boundary marker at the document start/end.                                                                               |
+| `removeStartMarker` / `removeEndMarker`     | Symmetric.                                                                                                                     |
+| `selectionTouchesFrozen(state)`             | Predicate (not a command) for toolbar enabled-state UIs.                                                                       |
+| `canFreezeSelection(state)`                 | Predicate.                                                                                                                     |
+| `getFrozenTextById(state)`                  | Map of every frozen `id` → `textContent` in the doc.                                                                           |
 
 ### Keymap (`freezeKeymap`)
 
 `freezeKeymap()` returns a ProseMirror plugin with the following defaults:
 
-- `Mod-b` — toggle freeze on the current selection (freeze if not adjacent
-  to a frozen, clear if adjacent). Note this displaces the conventional
-  bold shortcut; bind bold to `Mod-Shift-b` (or another key) and wire it
-  via `prosemirror-commands`'s `toggleMark`.
-- `Mod-Shift-b` — clear frozen adjacent to the cursor.
-- `Mod-Shift-l` — toggle freeze mode for the whole editor.
+- `Mod-b` runs `toggleFreeze()` — wraps the selection in a frozen, or
+  unfreezes (replaces the frozen with its inner text) when the selection
+  touches frozen content. This displaces the conventional bold shortcut;
+  bind bold to `Mod-Shift-b` (or another key) and wire it via
+  `prosemirror-commands`'s `toggleMark`.
+- `Mod-Shift-b` runs `clearFrozen` (always unfreezes).
+- `Mod-Shift-l` toggles freeze mode for the whole editor.
 
 Pass `{ freezeKey: false }` etc. to disable individual bindings, or
 `{ extra: { ... } }` to merge extra keymap entries.
@@ -253,7 +255,8 @@ const editor = new Editor({
 // Same names as the PM commands, exposed through the TipTap command surface.
 editor.commands.freezeSelection();
 editor.commands.addFrozen('NEW');
-editor.commands.clearFrozen();
+editor.commands.clearFrozen(); // unfreezes, keeps inner text
+editor.commands.toggleFreeze(); // freezes plain selections, unfreezes frozen ones
 editor.commands.insertStartMarker();
 editor.commands.insertEndMarker();
 editor.commands.toggleFreezeMode();

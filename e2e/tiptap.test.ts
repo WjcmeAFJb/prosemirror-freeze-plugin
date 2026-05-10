@@ -99,14 +99,28 @@ describe('TipTap Frozen extension', () => {
     expect(frozenSpans()).toHaveLength(0);
   });
 
-  it('clearFrozen removes a frozen that is adjacent to the cursor', () => {
+  it('clearFrozen unfreezes the frozen adjacent to the cursor', () => {
     const e = mount(undefined, '<p>x</p>');
     e.commands.setTextSelection(2);
     e.commands.addFrozen('boom');
-    // After insertion, position the cursor right after the new frozen.
     e.commands.setTextSelection(e.state.doc.content.size - 1);
     e.commands.clearFrozen();
     expect(frozenSpans()).toHaveLength(0);
+    expect(e.state.doc.firstChild!.textContent).toBe('xboom');
+  });
+
+  it('toggleFreeze freezes a plain selection then unfreezes it', () => {
+    const e = mount(undefined, '<p>hello world</p>');
+    e.commands.setTextSelection({ from: 1, to: 6 });
+    e.commands.toggleFreeze();
+    expect(frozenSpans()).toHaveLength(1);
+    expect(frozenSpans()[0]!.textContent).toBe('hello');
+    // Cursor is now at the boundary of the new frozen — toggling again
+    // should peel the wrap back off.
+    e.commands.setTextSelection({ from: 1, to: 1 + 'hello'.length + 2 });
+    e.commands.toggleFreeze();
+    expect(frozenSpans()).toHaveLength(0);
+    expect(e.state.doc.firstChild!.textContent).toBe('hello world');
   });
 
   it('insertStartMarker / insertEndMarker pin boundary markers', () => {

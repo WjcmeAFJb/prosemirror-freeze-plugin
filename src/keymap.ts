@@ -1,15 +1,15 @@
 import { keymap } from 'prosemirror-keymap';
 import type { Plugin } from 'prosemirror-state';
 
-import { clearFrozen, freezeSelection, toggleFreezeMode } from './commands.js';
+import { clearFrozen, toggleFreeze, toggleFreezeMode } from './commands.js';
 import type { Command } from './types.js';
 
 interface KeymapOptions {
-  /** Bind a freeze-toggle command. Defaults to `Mod-b` (freeze selection). */
+  /** Bind {@link toggleFreeze}. Defaults to `Mod-b`. */
   freezeKey?: string | false;
-  /** Bind toggleFreezeMode. Defaults to `Mod-Shift-l` (lock toggle). */
+  /** Bind {@link toggleFreezeMode}. Defaults to `Mod-Shift-l`. */
   toggleModeKey?: string | false;
-  /** Bind clearFrozen. Defaults to `Mod-Shift-b`. */
+  /** Bind {@link clearFrozen}. Defaults to `Mod-Shift-b`. */
   clearKey?: string | false;
   /** Extra bindings to merge in. */
   extra?: Record<string, Command>;
@@ -18,11 +18,12 @@ interface KeymapOptions {
 /**
  * Default keymap for the freeze plugin.
  *
- * - `Mod-b` toggles a frozen wrap on the current selection. Press once
- *   on a non-frozen selection to freeze it, press again on the resulting
- *   selection to clear it. (Note: this displaces the conventional bold
- *   shortcut; if you need bold on `Mod-b`, pass `freezeKey: 'Mod-Shift-b'`
- *   or another binding here and wire bold separately.)
+ * - `Mod-b` runs {@link toggleFreeze}: freezes the selection if it is
+ *   plain text, or unfreezes (replaces with the inner text) when the
+ *   selection touches a frozen node. Note this displaces the
+ *   conventional bold shortcut; if you need bold on `Mod-b`, pass
+ *   `freezeKey: 'Mod-Shift-b'` (or another key) and wire bold yourself.
+ * - `Mod-Shift-b` runs {@link clearFrozen} (always unfreezes).
  * - `Mod-Shift-l` toggles freeze mode for the whole editor.
  *
  * Add this plugin AFTER your base/keymap plugins so it can override
@@ -39,11 +40,7 @@ export function freezeKeymap(options: KeymapOptions = {}): Plugin {
   const bindings: Record<string, Command> = {};
 
   if (freezeKey !== false) {
-    bindings[freezeKey] = (state, dispatch) => {
-      // Toggle: if the selection touches frozen, clear; otherwise freeze.
-      if (clearFrozen(state, dispatch)) return true;
-      return freezeSelection()(state, dispatch);
-    };
+    bindings[freezeKey] = toggleFreeze();
   }
 
   if (toggleModeKey !== false) {

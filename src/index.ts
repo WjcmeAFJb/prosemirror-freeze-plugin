@@ -41,6 +41,7 @@ export {
   removeStartMarker,
   selectionTouchesFrozen,
   setFreezeMode,
+  toggleFreeze,
   toggleFreezeMode,
 } from './commands.js';
 

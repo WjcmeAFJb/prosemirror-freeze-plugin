@@ -13,9 +13,20 @@ import {
   removeStartMarker,
   selectionTouchesFrozen,
   setFreezeMode,
+  toggleFreeze,
   toggleFreezeMode,
 } from '../src/index.js';
-import { doc, findFrozen, frozen, makeState, marker, p, resetIds, runCommand } from './helpers.js';
+import {
+  doc,
+  findFrozen,
+  frozen,
+  makeState,
+  marker,
+  p,
+  resetIds,
+  runCommand,
+  schema,
+} from './helpers.js';
 
 describe('toggleFreezeMode / setFreezeMode', () => {
   beforeEach(resetIds);
@@ -111,10 +122,64 @@ describe('freezeSelection', () => {
   });
 });
 
-describe('clearFrozen', () => {
+describe('toggleFreeze', () => {
   beforeEach(resetIds);
 
-  it('removes the frozen node before a collapsed cursor', () => {
+  it('freezes a plain-text selection', () => {
+    const state = makeState(doc(p('hello world')), {
+      selection: { from: 1, to: 6 },
+    });
+    const r = runCommand(state, toggleFreeze());
+    expect(r.applied).toBe(true);
+    const frz = findFrozen(r.state.doc);
+    expect(frz).toHaveLength(1);
+    expect(frz[0]!.node.textContent).toBe('hello');
+  });
+
+  it('unfreezes when the cursor is adjacent to frozen', () => {
+    const f = frozen('zap', 'a');
+    const document_ = doc(p('x', f, 'y'));
+    const state = makeState(document_, { selection: { from: 2 + f.nodeSize } });
+    const r = runCommand(state, toggleFreeze());
+    expect(r.applied).toBe(true);
+    expect(findFrozen(r.state.doc)).toHaveLength(0);
+    expect(r.state.doc.firstChild!.textContent).toBe('xzapy');
+  });
+
+  it('unfreezes when the selection covers a frozen', () => {
+    const f = frozen('zap', 'a');
+    const document_ = doc(p('x ', f, ' y'));
+    const state = makeState(document_, {
+      selection: { from: 1, to: document_.content.size - 1 },
+    });
+    const r = runCommand(state, toggleFreeze());
+    expect(r.applied).toBe(true);
+    expect(findFrozen(r.state.doc)).toHaveLength(0);
+    expect(r.state.doc.firstChild!.textContent).toBe('x zap y');
+  });
+
+  it('returns false on an empty selection with no adjacent frozen', () => {
+    const state = makeState(doc(p('plain')), { selection: { from: 2 } });
+    const r = runCommand(state, toggleFreeze());
+    expect(r.applied).toBe(false);
+  });
+
+  it('round-trips: freeze → toggleFreeze unfreezes back to plain text', () => {
+    let state = makeState(doc(p('hello world')), {
+      selection: { from: 1, to: 6 },
+    });
+    state = runCommand(state, toggleFreeze()).state; // freeze "hello"
+    expect(findFrozen(state.doc)).toHaveLength(1);
+    state = runCommand(state, toggleFreeze()).state; // unfreeze
+    expect(findFrozen(state.doc)).toHaveLength(0);
+    expect(state.doc.firstChild!.textContent).toBe('hello world');
+  });
+});
+
+describe('clearFrozen (unfreeze)', () => {
+  beforeEach(resetIds);
+
+  it('replaces the frozen before a collapsed cursor with its text', () => {
     const f = frozen('zap', 'a');
     const document_ = doc(p('x ', f, ' y'));
     const cursorAfterFrozen = 2 + f.nodeSize + 1;
@@ -124,28 +189,43 @@ describe('clearFrozen', () => {
     const r = runCommand(state, clearFrozen);
     expect(r.applied).toBe(true);
     expect(findFrozen(r.state.doc)).toHaveLength(0);
+    expect(r.state.doc.firstChild!.textContent).toBe('x zap y');
   });
 
-  it('removes the frozen node after a collapsed cursor (no node before)', () => {
+  it('replaces the frozen after a collapsed cursor with its text', () => {
     const f = frozen('zap', 'a');
     const document_ = doc(p(f, ' y'));
     const state = makeState(document_, { selection: { from: 1 } });
     const r = runCommand(state, clearFrozen);
     expect(r.applied).toBe(true);
     expect(findFrozen(r.state.doc)).toHaveLength(0);
+    expect(r.state.doc.firstChild!.textContent).toBe('zap y');
   });
 
-  it('removes the surrounding frozen when the cursor is inside it', () => {
+  it('unfreezes the surrounding frozen when the cursor is inside it', () => {
     const f = frozen('inside', 'a');
     const document_ = doc(p(f));
-    // Cursor inside the frozen, between 'i' and 'n'.
     const state = makeState(document_, { selection: { from: 2 } });
     const r = runCommand(state, clearFrozen);
     expect(r.applied).toBe(true);
     expect(findFrozen(r.state.doc)).toHaveLength(0);
+    expect(r.state.doc.firstChild!.textContent).toBe('inside');
   });
 
-  it('removes all frozen nodes in a non-empty selection', () => {
+  it('removes empty frozens (markers) entirely instead of unfreezing them', () => {
+    const m = marker('m');
+    const f = frozen('content', 'f');
+    const document_ = doc(p(m, f));
+    const state = makeState(document_, {
+      selection: { from: 1, to: document_.content.size - 1 },
+    });
+    const r = runCommand(state, clearFrozen);
+    expect(r.applied).toBe(true);
+    expect(findFrozen(r.state.doc)).toHaveLength(0);
+    expect(r.state.doc.firstChild!.textContent).toBe('content');
+  });
+
+  it('unfreezes all frozen nodes in a non-empty selection', () => {
     const f1 = frozen('one', 'a');
     const f2 = frozen('two', 'b');
     const document_ = doc(p(f1, ' middle ', f2));
@@ -155,6 +235,7 @@ describe('clearFrozen', () => {
     const r = runCommand(state, clearFrozen);
     expect(r.applied).toBe(true);
     expect(findFrozen(r.state.doc)).toHaveLength(0);
+    expect(r.state.doc.firstChild!.textContent).toBe('one middle two');
   });
 
   it('returns false when there is no frozen to clear', () => {
@@ -163,7 +244,7 @@ describe('clearFrozen', () => {
     expect(r.applied).toBe(false);
   });
 
-  it('removes the *before* node first when cursor is in a slit', () => {
+  it('unfreezes the *before* node first when cursor is in a slit', () => {
     const f1 = frozen('a', 'id-a');
     const f2 = frozen('b', 'id-b');
     const document_ = doc(p(f1, f2));
@@ -175,6 +256,21 @@ describe('clearFrozen', () => {
     const remaining = findFrozen(r.state.doc);
     expect(remaining).toHaveLength(1);
     expect(remaining[0]!.node.attrs['id']).toBe('id-b');
+    expect(r.state.doc.firstChild!.textContent).toBe('ab');
+  });
+
+  it('preserves marks on the unfrozen text', () => {
+    const strong = schema.marks['strong']!;
+    const frozenType = schema.nodes['frozen']!;
+    const inner = schema.text('bold', [strong.create()]);
+    const f = frozenType.create({ id: 'a' }, [inner]);
+    const document_ = schema.node('doc', null, [schema.node('paragraph', null, [f])]);
+    const state = makeState(document_, { selection: { from: 1 } });
+    const r = runCommand(state, clearFrozen);
+    expect(r.applied).toBe(true);
+    const text = r.state.doc.firstChild!.firstChild!;
+    expect(text.text).toBe('bold');
+    expect(text.marks.some((m) => m.type.name === 'strong')).toBe(true);
   });
 });
 

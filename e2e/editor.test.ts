@@ -204,13 +204,14 @@ describe('API commands', () => {
     expect(inline[0]!.text).toBe('hello');
   });
 
-  it('clearFrozen removes a frozen node when cursor is adjacent', () => {
+  it('clearFrozen unfreezes the frozen adjacent to the cursor', () => {
     const f1 = f('zap', 'f1');
     const { view } = mount({ doc: buildDoc(paragraph('x', f1, 'y')) });
     placeCursor(view, 2 + f1.nodeSize);
     clearFrozen(view.state, view.dispatch.bind(view));
     expect(frozenCount(view)).toBe(0);
-    expect(docText(view)).toBe('xy');
+    // The frozen text "zap" survives as plain text.
+    expect(docText(view)).toBe('xzapy');
   });
 
   it('insertStartMarker prepends a boundary marker', () => {
@@ -290,13 +291,14 @@ describe('keymap (Mod-b)', () => {
     expect(inline[0]!.text).toBe('hello');
   });
 
-  it('Mod+B on a cursor adjacent to frozen unfreezes', async () => {
+  it('Mod+B on a cursor adjacent to frozen unfreezes (preserves text)', async () => {
     const f1 = f('boom', 'f1');
     const { view } = mount({ doc: buildDoc(paragraph('x', f1, 'y')) });
-    // Cursor right after the frozen.
     placeCursor(view, 2 + f1.nodeSize);
     await userEvent.keyboard('{Control>}b{/Control}');
     expect(frozenCount(view)).toBe(0);
+    // Text content survives.
+    expect(docText(view)).toBe('xboomy');
   });
 });
 
